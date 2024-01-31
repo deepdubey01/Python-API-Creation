@@ -27,7 +27,7 @@ def fetch_data_from_table(id=None):
         return result
     except Error as e:
         print("Error:", e)
-        raise  # Re-raise the exception to propagate it
+        raise 
     finally:
         if cursor:
             cursor.close()
