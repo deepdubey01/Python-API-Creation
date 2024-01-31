@@ -59,8 +59,8 @@ def get_teachers(id: int = None):
     return {"data": data}
 
 @teacher_router.post("/")
-def add_teacher_route(name: str, dob: str, status: str):
-    message = add_teacher(name, dob, status)
+def add_teacher_route(name: str, dob: str, previous_salary: int, current_salary: int, location: str, expert_in_subject: str, joining_date: str, status: str):
+    message = add_teacher(name, dob, previous_salary, current_salary, location, expert_in_subject, joining_date, status)
     return message
 
 @teacher_router.put("/{teacher_id}")

@@ -145,36 +145,32 @@ def delete_teacher_data(student_id: int):
         if cursor:
             cursor.close()
 
-def add_teacher(name: str, dob: str, status: str):
+
+def add_teacher(name: str, dob: str, previous_salary: int, current_salary: int, location: str, expert_in_subject: str, joining_date: str, status: str):
     conn = db_instance.get_connection()
     cursor = None
     try:
         dob_formatted = parse_date(dob)
+        joining_date_formatted = parse_date(joining_date)
         cursor = conn.cursor()
         cursor.execute("SELECT id FROM teachers WHERE name = %s AND dob = %s", (name, dob_formatted))
-        existing_student = cursor.fetchone()
+        existing_teacher = cursor.fetchone()
         
-        if existing_student:
-            raise HTTPException(status_code=400, detail="Student with the same data already exists")
-        cursor.execute("SELECT rollno FROM students ORDER BY rollno DESC LIMIT 1")
-        last_roll = cursor.fetchone()
+        if existing_teacher:
+            raise HTTPException(status_code=400, detail="Teacher with the same data already exists")
+        # Generate new teacher ID or roll number
+        # This part needs to be modified based on your database schema
         
-        if last_roll:
-            last_roll_number = last_roll[0]
-            next_roll_number = int(last_roll_number[1:]) + 1
-            new_rollno = f"S{next_roll_number:03}" 
-        else:
-            new_rollno = "S001"
-    
-        query = "INSERT INTO students (name, rollno, dob, status) VALUES (%s, %s, %s, %s)"
-        cursor.execute(query, (name, new_rollno, dob_formatted, status))
+        query = "INSERT INTO teachers (name, dob, previous_salary, current_salary, location, expert_in_subject, joining_date, status) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+        cursor.execute(query, (name, dob_formatted, previous_salary, current_salary, location, expert_in_subject, joining_date_formatted, status))
         conn.commit()
-        return {"message": "Student added successfully"}
+        return {"message": "Teacher added successfully"}
     except Error as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         if cursor:
             cursor.close()
+
 
 # def fetch_teachers_from_table(id=None):
     conn = db_instance.get_connection()
