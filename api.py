@@ -39,8 +39,8 @@ def get_students(id: int = None):
     return {"data": data}
 
 @student_router.post("/")
-def add_student_route(name: str, dob: str, status: str):
-    message = add_student(name, dob, status)
+def add_student_route(name: str, dob: str, status: str, id: int = None):
+    message = add_student(name, dob, status, id)
     return message
 
 @student_router.put("/{student_id}")

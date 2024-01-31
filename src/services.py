@@ -67,17 +67,32 @@ def delete_student_data(student_id: int):
         if cursor:
             cursor.close()
 
-def add_student(name: str, dob: str, status: str):
+def add_student( name: str, dob: str, status: str, id: int = None):
     conn = db_instance.get_connection()
     cursor = None
     try:
         dob_formatted = parse_date(dob)
         cursor = conn.cursor()
+        
         cursor.execute("SELECT id FROM students WHERE name = %s AND dob = %s", (name, dob_formatted))
         existing_student = cursor.fetchone()
         
         if existing_student:
-            raise HTTPException(status_code=400, detail="Student with the same data already exists")
+            # If the student exists and an id is provided, update the student data
+            if id:
+                cursor.execute("UPDATE students SET name = %s, dob = %s, status = %s WHERE id = %s",
+                               (name, dob_formatted, status, id))
+                conn.commit()
+                return {"message": f"Student with ID {id} updated successfully"}
+            else:
+                # If the student exists but no id is provided, raise an exception
+                raise HTTPException(status_code=400, detail="Student with the same data already exists")
+        
+        # If the student doesn't exist and an id is provided, raise an exception
+        if id:
+            raise HTTPException(status_code=404, detail=f"Student with ID {id} not found")
+        
+        # Generate roll number for the new student
         cursor.execute("SELECT rollno FROM students ORDER BY rollno DESC LIMIT 1")
         last_roll = cursor.fetchone()
         
@@ -88,12 +103,15 @@ def add_student(name: str, dob: str, status: str):
         else:
             new_rollno = "S001"
     
+        # Insert the new student data
         query = "INSERT INTO students (name, rollno, dob, status) VALUES (%s, %s, %s, %s)"
         cursor.execute(query, (name, new_rollno, dob_formatted, status))
         conn.commit()
         return {"message": "Student added successfully"}
+    
     except Error as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
     finally:
         if cursor:
             cursor.close()
