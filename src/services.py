@@ -1,41 +1,13 @@
 from datetime import datetime
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from typing import List
-import mysql.connector
+from http.client import HTTPException
 from mysql.connector import Error
+from dbConnection.database import DatabaseConnection
 
-app = FastAPI()
+db_instance = DatabaseConnection()
 
-origins = [
-    "http://localhost",
-    "http://localhost:8080"
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-def connect_to_database():
-    try:
-        conn = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="Mataji@786",
-            database="pythonLearning"
-        )
-        if conn.is_connected():
-            return conn
-    except Error as e:
-        print("Error:", e)
-
-
-
-def fetch_data_from_table(conn, id=None):
+def fetch_data_from_table(id=None):
+    conn = db_instance.get_connection()
+    cursor = None
     try:
         cursor = conn.cursor()
         if id is None:
@@ -55,12 +27,14 @@ def fetch_data_from_table(conn, id=None):
         return result
     except Error as e:
         print("Error:", e)
+        raise  # Re-raise the exception to propagate it
     finally:
-        cursor.close()
+        if cursor:
+            cursor.close()
 
-
-
-def update_student_status(conn, student_id: int, status: str):
+def update_student_status(student_id: int, status: str):
+    conn = db_instance.get_connection()
+    cursor = None
     try:
         cursor = conn.cursor()
         if status in ['Active', 'Inactive']:
@@ -73,12 +47,12 @@ def update_student_status(conn, student_id: int, status: str):
     except Error as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
-        cursor.close()
+        if cursor:
+            cursor.close()
 
-
-
-
-def delete_student_data(conn, student_id: int):
+def delete_student_data(student_id: int):
+    conn = db_instance.get_connection()
+    cursor = None
     try:
         cursor = conn.cursor()
         query = "DELETE FROM students WHERE id = %s"
@@ -88,9 +62,12 @@ def delete_student_data(conn, student_id: int):
     except Error as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
-        cursor.close()
+        if cursor:
+            cursor.close()
 
-def add_student(conn, name: str, dob: str, status: str):
+def add_student(name: str, dob: str, status: str):
+    conn = db_instance.get_connection()
+    cursor = None
     try:
         dob_formatted = parse_date(dob)
         cursor = conn.cursor()
@@ -116,9 +93,8 @@ def add_student(conn, name: str, dob: str, status: str):
     except Error as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
-        cursor.close()
-
-
+        if cursor:
+            cursor.close()
 
 def parse_date(dob):
     date_formats = ['%d/%m/%Y', '%Y/%m/%d', '%m-%Y-%d', '%Y-%m-%d']
