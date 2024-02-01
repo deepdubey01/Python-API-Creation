@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.services import (
     fetch_data_from_table,
     add_student,
-    update_student_status,
+    update_student,
     delete_student_data,
     add_teacher,
     update_teacher_status,
@@ -29,49 +29,60 @@ app.add_middleware(
 student_router = APIRouter(prefix="/student", tags=["Student"])
 teacher_router = APIRouter(prefix="/teacher", tags=["Teacher"])
 
+
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the API!"}
 
+
 @student_router.get("/")
 def get_students(id: int = None):
-    data = fetch_data_from_table(id,'students')
+    data = fetch_data_from_table(id, 'students')
     return {"data": data}
+
 
 @student_router.post("/")
-def add_student_route(name: str, dob: str, status: str, id: int = None):
-    message = add_student(name, dob, status, id)
+def add_student_route(name: str, dob: str, status: str):
+    message = add_student(name, dob, status)
     return message
 
+
 @student_router.put("/{student_id}")
-def update_student(student_id: int, status: str):
-    data = update_student_status(student_id, status)
+def update_student_route(student_id: int, name: str = None, dob: str = None, rollno: str = None, status: str = None):
+    data = update_student(student_id, name, dob, rollno, status)
     return {"data": data}
+
 
 @student_router.delete("/{student_id}")
 def delete_student(student_id: int):
     data = delete_student_data(student_id)
     return {"data": data}
 
+
 @teacher_router.get("/")
 def get_teachers(id: int = None):
-    data = fetch_data_from_table(id,'teachers')
+    data = fetch_data_from_table(id, 'teachers')
     return {"data": data}
+
 
 @teacher_router.post("/")
 def add_teacher_route(name: str, dob: str, previous_salary: int, current_salary: int, location: str, expert_in_subject: str, joining_date: str, status: str):
-    message = add_teacher(name, dob, previous_salary, current_salary, location, expert_in_subject, joining_date, status)
+    message = add_teacher(name, dob, previous_salary, current_salary,
+                          location, expert_in_subject, joining_date, status)
     return message
+
 
 @teacher_router.put("/{teacher_id}")
 def update_teacher(teacher_id: int, status: str):
     data = update_teacher_status(teacher_id, status)
     return {"data": data}
 
+
 @teacher_router.delete("/{teacher_id}")
 def delete_teacher(teacher_id: int):
     data = delete_teacher_data(teacher_id)
     return {"data": data}
+
 
 app.include_router(student_router)
 app.include_router(teacher_router)
